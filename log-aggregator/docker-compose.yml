@@ -28,6 +28,39 @@ services:
     networks:
       - kafka-net
 
+  producer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: log-producer
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      LOG_TOPIC: logs
+      LOG_RATE: 5
+    command: /app/docker/run-producer.sh
+    networks:
+      - kafka-net
+
+  consumer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: log-consumer
+    depends_on:
+      - kafka
+      - producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      LOG_TOPIC: logs
+      LOG_OUTPUT: /app/logs/logs.json
+    volumes:
+      - ./logs:/app/logs
+    command: /app/docker/run-consumer.sh
+    networks:
+      - kafka-net
+
 networks:
   kafka-net:
     driver: bridge 
